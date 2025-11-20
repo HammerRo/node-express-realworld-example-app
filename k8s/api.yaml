@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-app
+spec:
+  replicas: 1  # <--- Aquí cambiaremos el número en el futuro
+  selector:
+    matchLabels:
+      app: api-app
+  template:
+    metadata:
+      labels:
+        app: api-app
+    spec:
+      containers:
+      - name: api
+        image: node-express-realworld-example-app-api:latest
+        imagePullPolicy: Never  # <--- IMPORTANTE: Usa la imagen local de Kind
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          # Apunta al servicio de la base de datos definido arriba
+          value: "postgresql://admin:adminpassword@postgres-service:5432/databaserealworld"
+        - name: JWT_SECRET
+          value: "supersecreto123"
+        - name: NODE_ENV
+          value: "development"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+spec:
+  type: NodePort
+  selector:
+    app: api-app
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30000 # Puerto fijo para entrar desde fuera
